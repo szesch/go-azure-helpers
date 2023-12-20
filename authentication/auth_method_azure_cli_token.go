@@ -299,7 +299,15 @@ func obtainSubscription(subscriptionId string) (*cli.Subscription, error) {
 	}
 	err := jsonUnmarshalAzCmd(&acc, cmd...)
 	if err != nil {
-		return nil, fmt.Errorf("parsing json result from the Azure CLI: %v", err)
+		var accList []cli.Subscription
+		listCmd := []string{"account", "list", "--refresh", "-o=json"}
+		if err := jsonUnmarshalAzCmd(accList, listCmd...); err != nil {
+			return nil, fmt.Errorf("refreshing account list from the Azure CLI: %w", err)
+		}
+
+		if err := jsonUnmarshalAzCmd(&acc, cmd...); err != nil {
+			return nil, fmt.Errorf("parsing json result from the Azure CLI: %v", err)
+		}
 	}
 
 	return &acc, nil
